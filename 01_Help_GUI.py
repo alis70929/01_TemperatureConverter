@@ -1,3 +1,4 @@
+from functools import partial
 from tkinter import *
 # from functools import partial # to prevent unwanted windows(duplicates)
 import random
@@ -32,26 +33,37 @@ class Converter:
 
 
 class Help:
-    def _init_(self, partner):
-        background = "purple"
+    def __init__(self, partner):
+        background = "medium purple"
 
         # dsiable help button
         partner.help_button.config(state=DISABLED)
 
+        self.help_box = Toplevel()
+
+        self.help_box.protocol('WM_DELETE_WINDOW', partial(self.close_help, partner))
+
         self.help_frame = Frame(self.help_box, bg=background)
         self.help_frame.grid()
 
+        # Heading
         self.help_heading = Label(self.help_frame, text="help / instructions",
                                   font="arial 10 bold", bg=background)
         self.help_heading.grid(row=0)
-
+        # Text
         self.help_text = Label(self.help_frame, text="example text",
                                justify=LEFT, width=40, bg=background, wrap=250)
         self.help_text.grid(row=1)
 
-        self.help_dismiss = Button(self.help_frame, text="dismiss")
+        # DismissButton
+        self.help_dismiss = Button(self.help_frame, text="dismiss",
+                                   width=10, bg=background, font="arial 10 bold",
+                                   command=partial(self.close_help, partner))
+        self.help_dismiss.grid(row=2, pady=10)
 
-
+    def close_help(self, partner):
+        partner.help_button.config(state=NORMAL)
+        self.help_box.destroy()
 
 
 # main routine
