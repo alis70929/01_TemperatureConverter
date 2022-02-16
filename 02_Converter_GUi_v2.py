@@ -34,12 +34,14 @@ class Converter:
 
         self.to_c_button = Button(self.conversion_buttons_frame,
                                   text="To Celsius", font="Arial 10 bold",
-                                  bg=background_color, padx=10, pady=10)
+                                  bg=background_color, padx=10, pady=10,
+                                  command=lambda: self.temp_convert(-459))
         self.to_c_button.grid(row=0, column=0)
 
         self.to_f_button = Button(self.conversion_buttons_frame,
                                   text="To Fahrenheit", font="Arial 10 bold",
-                                  bg=background_color, padx=10, pady=10)
+                                  bg=background_color, padx=10, pady=10,
+                                  command=lambda: self.temp_convert(-273))
         self.to_f_button.grid(row=0, column=1)
 
         self.converted_label = Label(self.converter_frame, font="Arial 14 bold",
@@ -60,6 +62,52 @@ class Converter:
     def help(self):
         get_help = Help(self)
         get_help.help_text.configure(text="Help text goes here")
+
+    def temp_convert(self, low):
+        error_color = "#ffafaf"
+        to_convert = self.to_convert_entry.get()
+        print()
+        print("{} to convert".format(to_convert))
+        print("{} is low boundary".format(low))
+        
+        try:
+            to_convert = float(to_convert)
+            has_errors = "no"
+
+            if low == -273 and to_convert >= low:
+                fahrenheit = (to_convert * 9 / 5) + 32
+                to_convert = self.round_it(to_convert)
+                fahrenheit = self.round_it(fahrenheit)
+                answer = "{}degrees C is {} Degrees F".format(to_convert, fahrenheit)
+
+            elif low == -459 and to_convert >= low:
+                Celsius = (to_convert - 32) * 5 / 9
+                to_convert = self.round_it(to_convert)
+                Celsius = self.round_it(Celsius)
+                answer = "{} degrees F is {} Degrees C".format(to_convert, Celsius)
+
+            else:
+                answer = "Too Cold!"
+                has_errors = "yes"
+
+            if has_errors == "no":
+                self.converted_label.configure(text=answer, fg="blue")
+                self.to_convert_entry.configure(bg="white")
+            else:
+                self.converted_label.configure(text=answer, fg="red")
+                self.to_convert_entry.configure(bg=error_color)
+
+            print(answer)
+        except ValueError:
+            self.converted_label.configure(text="Enter a Number!!!", fg="red")
+            self.to_convert_entry.configure(bg=error_color)
+            print("error")
+
+    def round_it(self, to_round):
+        if to_round % 1 == 0:
+            return int(to_round)
+        else:
+            return round(to_round, 1)
 
 
 class Help:
