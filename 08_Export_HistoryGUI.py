@@ -1,7 +1,6 @@
 from functools import partial
 from tkinter import *
 # from functools import partial # to prevent unwanted windows(duplicates)
-import random
 
 
 class Converter:
@@ -10,7 +9,8 @@ class Converter:
 
         # Formatting Variables
         background_color = "light blue"
-
+        
+        self.all_calculations = []
         # converter main screen GUI
         self.converter_frame = Frame(width=600, height=600, bg=background_color, padx=10, pady=10)
         self.converter_frame.grid()
@@ -52,7 +52,8 @@ class Converter:
         self.hist_help_frame.grid(row=5)
 
         self.calc_his_button = Button(self.hist_help_frame, font="Arial 12 bold",
-                                      text="Calculation History", width=15)
+                                      text="Calculation History", width=15,
+                                      command=self.history)
         self.calc_his_button.grid(row=0, column=0)
 
         self.help_button = Button(self.hist_help_frame, font="Arial 12 bold",
@@ -97,11 +98,18 @@ class Converter:
                 self.converted_label.configure(text=answer, fg="red")
                 self.to_convert_entry.configure(bg=error_color)
 
-            print(answer)
+            if answer != "Too Cold!":
+                self.all_calculations.append(answer)
+                print(self.all_calculations)
+
         except ValueError:
             self.converted_label.configure(text="Enter a Number!!!", fg="red")
             self.to_convert_entry.configure(bg=error_color)
             print("error")
+
+    def history(self):
+        get_history = History(self)
+        get_history.history_text.configure(text="History text goes here")
 
     def round_it(self, to_round):
         if to_round % 1 == 0:
@@ -142,6 +150,46 @@ class Help:
     def close_help(self, partner):
         partner.help_button.config(state=NORMAL)
         self.help_box.destroy()
+
+
+class History:
+    def __init__(self, partner):
+        background_color = "#a9ef99"
+        partner.calc_his_button.config(state=DISABLED)
+
+        self.history_box = Toplevel()
+
+        self.history_box.protocol("WM_DELETE_WINDOW", partial(self.close_history, partner))
+
+        self.history_frame = Frame(self.history_box, width=300, bg=background_color)
+        self.history_frame.grid()
+
+        self.history_header = Label(self.history_frame, text="history / Instructions",
+                                    font="arial 14 bold", bg=background_color)
+        self.history_header.grid(row=0)
+
+        self.history_text = Label(self.history_frame,
+                                  text="here are your most recent calculations"
+                                  "please use the export button to create a text file"
+                                  "of all your calculations for this session",
+                                  font="arial 10 italic", justify=LEFT,
+                                  bg=background_color, fg="maroon", padx=10, pady=10)
+        self.history_text.grid(row=1)
+
+        self.export_dismiss_frame = Frame(self.history_frame)
+        self.export_dismiss_frame.grid(row=3)
+
+        self.export_button = Button(self.export_dismiss_frame, text="Export",
+                                    font="arial 10 bold")
+        # DismissButton
+        self.history_dismiss = Button(self.export_dismiss_frame, text="dismiss",
+                                      width=10, bg=background_color, font="arial 10 bold",
+                                      command=partial(self.close_history, partner))
+        self.history_dismiss.grid(row=0, column=1, pady=10)
+
+    def close_history(self, partner):
+        partner.calc_his_button.config(state=NORMAL)
+        self.history_box.destroy()
 
 
 # main routine

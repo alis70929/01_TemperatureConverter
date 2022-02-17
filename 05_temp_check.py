@@ -8,7 +8,6 @@ def temp_check(low):
                 print("too cold")
             else:
                 return response
-        
+
         except ValueError:
             print("Please Enter a number")
-    
