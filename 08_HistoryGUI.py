@@ -1,5 +1,6 @@
 from functools import partial
 from tkinter import *
+from turtle import back
 # from functools import partial # to prevent unwanted windows(duplicates)
 
 
@@ -53,7 +54,7 @@ class Converter:
 
         self.calc_his_button = Button(self.hist_help_frame, font="Arial 12 bold",
                                       text="Calculation History", width=15,
-                                      command=self.history)
+                                      command=lambda: self.history(self.all_calculations))
         self.calc_his_button.grid(row=0, column=0)
 
         self.help_button = Button(self.hist_help_frame, font="Arial 12 bold",
@@ -107,9 +108,8 @@ class Converter:
             self.to_convert_entry.configure(bg=error_color)
             print("error")
 
-    def history(self):
-        get_history = History(self)
-        get_history.history_text.configure(text="History text goes here")
+    def history(self, all_calculations):
+        History(self, all_calculations)
 
     def round_it(self, to_round):
         if to_round % 1 == 0:
@@ -153,7 +153,7 @@ class Help:
 
 
 class History:
-    def __init__(self, partner):
+    def __init__(self, partner, all_calculations):
         background_color = "#a9ef99"
         partner.calc_his_button.config(state=DISABLED)
 
@@ -161,7 +161,7 @@ class History:
 
         self.history_box.protocol("WM_DELETE_WINDOW", partial(self.close_history, partner))
 
-        self.history_frame = Frame(self.history_box, width=300, bg=background_color)
+        self.history_frame = Frame(self.history_box, width=300, height=600, bg=background_color)
         self.history_frame.grid()
 
         self.history_header = Label(self.history_frame, text="history / Instructions",
@@ -176,11 +176,25 @@ class History:
                                   bg=background_color, fg="maroon", padx=10, pady=10)
         self.history_text.grid(row=1)
 
-        self.export_dismiss_frame = Frame(self.history_frame)
+        history_string = ""
+
+        if len(all_calculations) >= 7:
+            for item in range(0, 7):
+                history_string += all_calculations[len(all_calculations) - item - 1] + "\n"
+        else:
+            for item in all_calculations:
+                history_string += all_calculations[len(all_calculations) - all_calculations.index(item) - 1] + "\n"
+
+        self.calc_label = Label(self.history_frame, text=history_string,
+                                bg=background_color, font="Arial 12", justify=LEFT)
+        self.calc_label.grid(row=2)
+
+        self.export_dismiss_frame = Frame(self.history_frame, bg=background_color)
         self.export_dismiss_frame.grid(row=3)
 
         self.export_button = Button(self.export_dismiss_frame, text="Export",
-                                    font="arial 10 bold")
+                                    width=10, bg=background_color, font="arial 10 bold")
+        self.export_button.grid(row=0, column=0, pady=10)
         # DismissButton
         self.history_dismiss = Button(self.export_dismiss_frame, text="dismiss",
                                       width=10, bg=background_color, font="arial 10 bold",
