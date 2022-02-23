@@ -10,7 +10,7 @@ class Converter:
 
         # Formatting Variables
         background_color = "light blue"
-        
+
         self.all_calculations = []
         # converter main screen GUI
         self.converter_frame = Frame(width=600, height=600, bg=background_color, padx=10, pady=10)

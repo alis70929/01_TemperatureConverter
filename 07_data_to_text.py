@@ -22,17 +22,8 @@ while has_error == "yes":
     if filename == "":
         problem = "can't be blank"
         has_error = "yes"
-    
+
     if has_error == "yes":
         print("Invalid filename - {}".format(problem))
     else:
         print("you entered a valid filename")
-
-filename = filename + ".txt"
-
-f = open(filename, "w+")
-
-for item in data:
-    f.write(item + "\n")
-
-f.close()

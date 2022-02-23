@@ -1,6 +1,6 @@
 from functools import partial
 from tkinter import *
-from turtle import back
+import re
 # from functools import partial # to prevent unwanted windows(duplicates)
 
 
@@ -10,7 +10,7 @@ class Converter:
 
         # Formatting Variables
         background_color = "light blue"
-        
+
         self.all_calculations = []
         # converter main screen GUI
         self.converter_frame = Frame(width=600, height=600, bg=background_color, padx=10, pady=10)
@@ -57,6 +57,9 @@ class Converter:
                                       command=lambda: self.history(self.all_calculations))
         self.calc_his_button.grid(row=0, column=0)
 
+        if len(self.all_calculations) == 0:
+            self.calc_his_button.config(state=DISABLED)
+
         self.help_button = Button(self.hist_help_frame, font="Arial 12 bold",
                                   text="Help", width=15, command=self.help)
         self.help_button.grid(row=0, column=1)
@@ -68,9 +71,6 @@ class Converter:
     def temp_convert(self, low):
         error_color = "#ffafaf"
         to_convert = self.to_convert_entry.get()
-        print()
-        print("{} to convert".format(to_convert))
-        print("{} is low boundary".format(low))
 
         try:
             to_convert = float(to_convert)
@@ -99,14 +99,13 @@ class Converter:
                 self.converted_label.configure(text=answer, fg="red")
                 self.to_convert_entry.configure(bg=error_color)
 
-            if answer != "Too Cold!":
+            if has_errors != "yes":
                 self.all_calculations.append(answer)
-                print(self.all_calculations)
+                self.calc_his_button.config(state=NORMAL)
 
         except ValueError:
             self.converted_label.configure(text="Enter a Number!!!", fg="red")
             self.to_convert_entry.configure(bg=error_color)
-            print("error")
 
     def history(self, all_calculations):
         History(self, all_calculations)
@@ -170,11 +169,11 @@ class History:
         self.history_header.grid(row=0)
 
         self.history_text = Label(self.history_frame,
-                                  text="here are your most recent calculations"
+                                  text="here are your most recent calculations "
                                   "please use the export button to create a text file"
                                   "of all your calculations for this session",
                                   font="arial 10 italic", justify=LEFT,
-                                  bg=background_color, fg="maroon", padx=10, pady=10)
+                                  bg=background_color, fg="maroon", padx=10, pady=10, wrap=250)
         self.history_text.grid(row=1)
 
         history_string = ""
@@ -190,15 +189,15 @@ class History:
                                 bg=background_color, font="Arial 12", justify=LEFT)
         self.calc_label.grid(row=2)
 
-        self.export_dismiss_frame = Frame(self.history_frame, bg=background_color)
-        self.export_dismiss_frame.grid(row=3)
+        self.cancel_button_frame = Frame(self.history_frame, bg=background_color)
+        self.cancel_button_frame.grid(row=3)
 
-        self.export_button = Button(self.export_dismiss_frame, text="Export",
+        self.export_button = Button(self.cancel_button_frame, text="Export",
                                     width=10, bg=background_color, font="arial 10 bold",
-                                    command=lambda: self.export())
+                                    command=lambda: self.export(all_calculations))
         self.export_button.grid(row=0, column=0, pady=10)
         # DismissButton
-        self.history_dismiss = Button(self.export_dismiss_frame, text="dismiss",
+        self.history_dismiss = Button(self.cancel_button_frame, text="Dismiss",
                                       width=10, bg=background_color, font="arial 10 bold",
                                       command=partial(self.close_history, partner))
         self.history_dismiss.grid(row=0, column=1, pady=10)
@@ -209,12 +208,12 @@ class History:
             self.get_export.close_export(self)
         self.history_box.destroy()
 
-    def export(self):
-        self.get_export = Export(self)
+    def export(self, all_calculations):
+        self.get_export = Export(self, all_calculations)
 
 
 class Export:
-    def __init__(self, partner):
+    def __init__(self, partner, all_calculations):
         background = "medium purple"
 
         # dsiable help button
@@ -232,19 +231,71 @@ class Export:
                                     font="arial 10 bold", bg=background)
         self.export_heading.grid(row=0)
         # Text
-        self.export_text = Label(self.export_frame, text="example text",
+        self.export_text = Label(self.export_frame, text="Enter a filename below "
+                                                         "and press save to save your history "
+                                                         "to a text file",
                                  justify=LEFT, width=40, bg=background, wrap=250)
         self.export_text.grid(row=1)
 
-        # DismissButton
-        self.export_dismiss = Button(self.export_frame, text="dismiss",
-                                     width=10, bg=background, font="arial 10 bold",
-                                     command=partial(self.close_export, partner))
-        self.export_dismiss.grid(row=2, pady=10)
+        self.filename_entry = Entry(self.export_frame, width=20,
+                                    font="Arial 14 bold", justify=CENTER)
+        self.filename_entry.grid(row=3, pady=10)
+
+        self.save_error_label = Label(self.export_frame, text="", fg="maroon",
+                                      bg=background)
+        self.save_error_label.grid(row=4)
+
+        self.save_cancel_frame = Frame(self.export_frame)
+        self.save_cancel_frame.grid(row=5, pady=10)
+
+        self.save_button = Button(self.save_cancel_frame, text="Save",
+                                  width=10, bg=background, font="arial 10 bold",
+                                  command=partial(lambda: self.save_history(partner, all_calculations)))
+        self.save_button.grid(row=0, column=0)
+
+        # Cancel Button
+        self.cancel_button = Button(self.save_cancel_frame, text="Cancel",
+                                    width=10, bg=background, font="arial 10 bold",
+                                    command=partial(self.close_export, partner))
+        self.cancel_button.grid(row=0, column=1)
 
     def close_export(self, partner):
         partner.export_button.config(state=NORMAL)
         self.export_box.destroy()
+
+    def save_history(self, partner, all_calculations):
+
+        has_error = "no"
+        filename = self.filename_entry.get()
+
+        valid_char = "[A-za-z0-9_]"
+        for letter in filename:
+            if re.match(valid_char, filename):
+                continue
+
+            elif letter == " ":
+                problem = "no spaces allowed"
+            else:
+                problem = "no {}'s allowed".format(letter)
+            has_error = "yes"
+        if filename == "":
+            problem = "can't be blank"
+            has_error = "yes"
+
+        if has_error == "yes":
+            self.save_error_label.config(text="Invalid filename - {}".format(problem))
+            self.filename_entry.config(bg="#ffafaf")
+        else:
+            filename = filename + ".txt"
+
+            f = open(filename, "w+")
+
+            for item in all_calculations:
+                f.write(item + "\n")
+
+            f.close()
+
+            self.close_export(partner)
 
 
 # main routine
